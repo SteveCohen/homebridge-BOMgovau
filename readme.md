@@ -13,7 +13,7 @@ Configuration sample (uses Canberra Airport weather in this example)
 ```json
 "accessories": [
 	{ "accessory":"BOMgovau",
-	"name":"Canberra"
+	"name":"Canberra Airport"
 	"stationurl":"http://reg.bom.gov.au/fwo/IDN60903/IDN60903.94926.json"
    }
 ```

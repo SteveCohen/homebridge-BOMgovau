@@ -25,17 +25,20 @@ function BOMgovau(log,config,api){
     this.lastUpdateTime=0;
     this.BOMdataExpires=0;
 
-    this.stationName= config['stationName'];
+    this.stationName=this.config['name'];
+    this.name = this.stationName;
+/*
     if (!this.stationName){
         this.stationName="Unnamed Station";
     }
-    this.stationURL = config['stationURL'];
+*/
+    this.stationURL = this.config['stationURL'];
     if (!this.stationURL) {
         this.log("[BOM gov au] No station URL specified. You probably don't want the ACT, but it'll be a nice demo.");
         this.stationURL = "http://reg.bom.gov.au/fwo/IDN60903/IDN60903.94926.json";
         this.stationName="Demo station (Canberra)";        
     }
-    this.name = this.stationName; 
+
 
     this.log("[BOM gov au] Station Name is %s",this.stationName);    
     this.log("[BOM gov au] Station URL is %s",this.stationURL);
