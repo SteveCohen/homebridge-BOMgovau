@@ -1,0 +1,30 @@
+{
+  "name": "homebridge-BOMgovau",
+  "version": "0.1.0",
+  "description": "Makes BOM.gov.au data available in your Homebridge(Homekit) setup",
+  "homepage":"https://github.com/SteveCohen/homebridge-BOMgovau",
+  "license": "Apache-2",
+  "keywords": [
+    "homebridge-plugin",
+    "BOM","Bureau of Meteorology","BOM.gov.au","BOMgovau",
+    "Australia",
+    "weather","sensor","temperature","humidity","pressure"
+  ],
+  "bugs":{ "url" : "https://github.com/SteveCohen/homebridge-BOMgovau/issues"},
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.4.33"
+  },
+  "author": {
+    "name": "Stephen Cohen"
+  },
+  
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stevecohen/homebridge-BOMgovau"
+  },
+  "dependencies": {
+    "node-fetch":">=1.0",
+    "hap-nodejs-community-types": "https://github.com/homespun/hap-nodejs-community-types.git"
+    }
+}
