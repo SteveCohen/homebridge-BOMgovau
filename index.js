@@ -1,4 +1,3 @@
-
 "use strict";
 
 var Service, Characteristic, HomebridgeAPI;
@@ -22,16 +21,11 @@ function BOMgovau(log,config,api){
     this.name = "BOMgovau";   //Initialise as something.
     this.log = log;
     this.config = config;
-    this.lastUpdateTime=0;
     this.BOMdataExpires=0;
 
     this.stationName=this.config['name'];
     this.name = this.stationName;
-/*
-    if (!this.stationName){
-        this.stationName="Unnamed Station";
-    }
-*/
+
     this.stationURL = this.config['stationURL'];
     if (!this.stationURL) {
         this.log("[BOM gov au] No station URL specified. You probably don't want the ACT, but it'll be a nice demo.");
@@ -57,13 +51,11 @@ function BOMgovau(log,config,api){
     this.temperatureService = new Service.TemperatureSensor(this.name);
     this.temperatureService
         .getCharacteristic(Characteristic.CurrentTemperature)
-        .setProps({minValue: -100, maxValue: 100});
-    this.temperatureService
-        .getCharacteristic(Characteristic.CurrentTemperature)
+        .setProps({minValue: -100, maxValue: 100})
         .on('get', this.getStateTemperature.bind(this));
     this.temperatureService.addCharacteristic(CommunityTypes.AtmosphericPressureLevel); //Add pressure characteristic.
 
-    //Flags for later debugging.
+//Service status.
     this.temperatureService.addOptionalCharacteristic(Characteristic.StatusFault); 
     this.temperatureService.addOptionalCharacteristic(Characteristic.StatusActive);
     this.temperatureService.setCharacteristic(Characteristic.StatusActive,false);
@@ -95,23 +87,20 @@ function BOMgovau(log,config,api){
 
 
 BOMgovau.prototype.updateObservations = function() {
-    this.log("[BOM gov au] updateObservations running");
-    //If we haven't done an update yet, or the updateFrequency has elapsed, or the data has expired.
+    //If we haven't done an update yet, or the data has expired.
     var now=new Date();
     var curTime=now.getTime();
-    var timeSinceUpdate=curTime-this.lastUpdateTime;
-    this.log("Current Time is "+curTime+", lastUpdatetime:"+this.lastUpdateTime+" timeSinceLastUpdate:"+timeSinceUpdate);
+    
+    if (curTime>=this.BOMdataExpires) {
+        this.log("Current Time is "+curTime+", BOM data expires at "+this.BOMdataExpires);
+        this.log("Updating observations from BOM.");
 
-    if ((this.lastUpdateTime == null) || (timeSinceUpdate>=this.config.updateFrequency) || (curTime>=this.BOMdataExpires)){
-        this.log("Updating observations from BOM. [timeSinceUpdate="+timeSinceUpdate+"; BOMDdataExpires="+this.BOMdataExpires+" Curtime="+curTime+"]");
         fetch(this.stationURL)
           .then(response => {
             response.json().then(json => {
                 this.obs=json['observations']['data'][0];
-                this.log("Observations retrieved from BOM.gov.au");
+                this.log("Observations retrieved.");
                 
-                var d=new Date();
-                this.lastUpdateTime=d.getTime(); //UTC
                 var BOMyear=parseInt(this.obs.aifstime_utc.substr(0,4));
                 var BOMmonth=parseInt(this.obs.aifstime_utc.substr(4,2))-1; //Months start at 0, not 1.
                 var BOMday=parseInt(this.obs.aifstime_utc.substr(6,2));
@@ -120,11 +109,11 @@ BOMgovau.prototype.updateObservations = function() {
                 var BOMsec=this.obs.aifstime_utc.substr(12,2);
                 var BOMdataDateTime=new Date(Date.UTC(BOMyear,BOMmonth,BOMday,BOMhour,BOMmin,BOMsec)); 
                 
-                var BOMdataAge=d.getTime()-BOMdataDateTime.getTime()
+                var BOMdataAge=curTime-BOMdataDateTime.getTime()
                 
                 // bomUpdates every 30 mins = 30 * 60 * 1000 ms. 
                 this.BOMdataExpires=BOMdataDateTime.getTime()+30*60*1000;
-                this.log("BOM data will expire at "+this.BOMdataExpires.toString()+" which is in "+(this.BOMdataExpires-d.getTime())/1000/60+"min")
+                this.log("BOM data will expire at "+this.BOMdataExpires.toString()+" which is in "+((this.BOMdataExpires-curTime)/1000/60).toFixed(1)+"min")
                 
                 
                 // update all properties.
@@ -138,11 +127,7 @@ BOMgovau.prototype.updateObservations = function() {
                 this.humidityService.setCharacteristic(Characteristic.CurrentRelativeHumidity, isNaN(this.obs.rel_hum) ? 0 : this.obs.rel_hum);
                 this.humidityService.setCharacteristic(Characteristic.StatusActive,true);
                 this.humidityService.setCharacteristic(Characteristic.StatusFault,false);
-            
-                this.informationService.setCharacteristic(Characteristic.SerialNumber, "Station:"+this.stationName+" | "+this.obs.local_date_time);
-
-                this.lastUpdateTime=curTime; 
-                                
+                                            
             });
           })
           .catch(error => {
@@ -153,30 +138,21 @@ BOMgovau.prototype.updateObservations = function() {
           });
 
     } else {
-        this.log("BOM update period has not elapsed. BOM data expires at "+this.BOMdataExpires);
+        this.log("BOM data will expire at "+this.BOMdataExpires.toString()+" which is in "+((this.BOMdataExpires-curTime)/1000/60).toFixed(1)+"min")
     }
 
 }
 
 BOMgovau.prototype.getStateHumidity = function(callback) {
     this.updateObservations();
-   	this.log("Setting humidity to "+this.obs.rel_hum);
     callback(null,this.obs.rel_hum);
 }
 
 BOMgovau.prototype.getStateTemperature = function(callback) {
     this.updateObservations();
-    this.log("Setting temperature to "+this.obs.air_temp);
     callback(null,this.obs.air_temp);
 }
 	
 BOMgovau.prototype.getServices = function(callback){
     return [this.informationService,this.temperatureService,this.humidityService]; //Todo: enable user to specify true/false for apparent temp in config file; then load it (or not) here.
 }
-
-
-/* //I forget why I needed this. Commented out for now...
-if (!Date.now) {
-    Date.now = function() { return new Date().getTime(); }
-}
-*/
