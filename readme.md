@@ -5,7 +5,7 @@ Retrieves official weather data (temperature, humidity, air pressure) from the A
 
 # Installation
 
-## Install to NPM
+## Install using NPM
 ` npm install -g homebridge-bomgovau `
 
 While that's running, you'll need to get the right URL for your chosen station...
