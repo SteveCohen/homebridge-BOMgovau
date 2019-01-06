@@ -1,6 +1,6 @@
 {
   "name": "homebridge-bomgovau",
-  "version": "0.1.2",
+  "version": "0.1.2.1",
   "description": "Makes BOM.gov.au data available in your Homebridge(Homekit) setup",
   "homepage":"https://github.com/SteveCohen/homebridge-BOMgovau",
   "license": "Apache-2",
