@@ -25,3 +25,19 @@ Configuration sample (uses Canberra Airport in this example)
 
 Restart homebridge and the temperature and humidity sensors should appear in your Home app. Air pressure is not currently in the Home app, but can be viewed through third party apps (e.g. Elgato's Eve app). Data will refresh every 30 minutes, when BOM publishes new data to the web. 
 
+
+# Optional: Disable measurements
+By default, all sensors are enabled. You can disable selected sensors by adding a 'sensors' array to the config, and specifying true/false for whether a sensor is enabled. This is useful when your BOM site does not provide certain measurements. 
+
+Example:
+```json
+"accessories": [
+	{ "accessory":"BOMgovau",
+	"name":"Canberra Airport",
+	"stationURL":"http://reg.bom.gov.au/fwo/IDN60903/IDN60903.94926.json",
+	"sensors":{
+    	"humidity":false
+	}
+   }
+```
+Current sensors that can be listed are `temperature`,`apparentTemp`,`humidity`.
