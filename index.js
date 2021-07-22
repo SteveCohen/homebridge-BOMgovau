@@ -24,6 +24,7 @@ module.exports = function(homebridge) {
 
 function BOMgovau(log,config,api){
     var pjson = require('./package.json');
+    this.plugin=pjson['name'];
     this.version=pjson['version'];
     this.name = "BOMgovau";
     this.log = log;
@@ -42,7 +43,7 @@ function BOMgovau(log,config,api){
     this.log("[BOM gov au] Enabling sensors")
     for (var i = 0; i < possibleSensors.length; i++) {
         var sensor=possibleSensors[i];
-        if (this.config['sensors'][sensor]===undefined){
+        if (this.config['sensors']===undefined || this.config['sensors'][sensor]===undefined){
             this.sensors[sensor]=true;   
         }
         else {
@@ -84,7 +85,9 @@ function BOMgovau(log,config,api){
             .setProps({minValue: -100, maxValue: 100})
             .on('get', this.getStateTemperature.bind(this));
         this.temperatureService.addCharacteristic(CommunityTypes.AtmosphericPressureLevel); //Add pressure characteristic.
-        
+        this.temperatureService
+            .getCharacteristic(CommunityTypes.AtmosphericPressureLevel)
+            .setProps({format: Characteristic.Formats.UINT16, minValue: 800, maxValue: 1200});
 
         //Service status.
         this.temperatureService.addOptionalCharacteristic(Characteristic.StatusFault); 
@@ -135,7 +138,7 @@ BOMgovau.prototype.updateObservations = function() {
         this.log("Updating observations from BOM.");
 
         const options = {
-            headers: { 'User-Agent': this.name + '/' + this.version },
+            headers: { 'User-Agent': this.plugin + '/' + this.version + ' (' + this.name + ')' },
         };
 
         fetch(this.stationURL, options)
@@ -143,7 +146,8 @@ BOMgovau.prototype.updateObservations = function() {
             response.json()
             .then(json => {
                 this.obs=json['observations']['data'][0];
-                this.log("Observations retrieved.");
+                this.header=json['observations']['header'][0]
+                this.log("Observations retrieved for " + this.header.name + ", " + this.header.state);
                 
                 var BOMyear=parseInt(this.obs.aifstime_utc.substr(0,4));
                 var BOMmonth=parseInt(this.obs.aifstime_utc.substr(4,2))-1; //Months start at 0, not 1.
