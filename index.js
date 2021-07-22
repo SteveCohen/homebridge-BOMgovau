@@ -134,9 +134,14 @@ BOMgovau.prototype.updateObservations = function() {
         this.log("Current Time is "+curTime+", BOM data expires at "+this.BOMdataExpires);
         this.log("Updating observations from BOM.");
 
-        fetch(this.stationURL)
+        const options = {
+            headers: { 'User-Agent': this.name + '/' + this.version },
+        };
+
+        fetch(this.stationURL, options)
           .then(response => {
-            response.json().then(json => {
+            response.json()
+            .then(json => {
                 this.obs=json['observations']['data'][0];
                 this.log("Observations retrieved.");
                 
@@ -180,6 +185,12 @@ BOMgovau.prototype.updateObservations = function() {
                     });
                 this.log("Added FakeGato history")
                                             
+            })
+            .catch(error => {
+                this.temperatureService.setCharacteristic(Characteristic.StatusFault,true);
+                this.humidityService.setCharacteristic(Characteristic.StatusFault,true);
+                this.log('Request failed: ' + response.status)
+                this.log(error);      
             });
           })
           .catch(error => {
