@@ -5,7 +5,7 @@
 var Service, Characteristic, HomebridgeAPI;
 var CommunityTypes;
 var FakeGatoHistoryService;
-const moment = require('moment');
+
 var fetch = require("node-fetch");
 
   
@@ -182,7 +182,7 @@ BOMgovau.prototype.updateObservations = function() {
                 
                 //FakeGato logs:
                 this.history.addEntry({
-                      time: moment().unix(),
+                      time: curTime,
                       temp: this.obs.air_temp,
                       pressure: this.obs.press,
                       humidity: this.obs.rel_hum
