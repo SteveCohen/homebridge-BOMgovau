@@ -5,7 +5,7 @@
 var Service, Characteristic, HomebridgeAPI;
 var CommunityTypes;
 var FakeGatoHistoryService;
-const moment = require('moment');
+
 var fetch = require("node-fetch");
 
   
@@ -24,6 +24,7 @@ module.exports = function(homebridge) {
 
 function BOMgovau(log,config,api){
     var pjson = require('./package.json');
+    this.plugin=pjson['name'];
     this.version=pjson['version'];
     this.name = "BOMgovau";
     this.log = log;
@@ -42,7 +43,7 @@ function BOMgovau(log,config,api){
     this.log("[BOM gov au] Enabling sensors")
     for (var i = 0; i < possibleSensors.length; i++) {
         var sensor=possibleSensors[i];
-        if (this.config['sensors'][sensor]===undefined){
+        if (this.config['sensors']===undefined || this.config['sensors'][sensor]===undefined){
             this.sensors[sensor]=true;   
         }
         else {
@@ -84,7 +85,9 @@ function BOMgovau(log,config,api){
             .setProps({minValue: -100, maxValue: 100})
             .on('get', this.getStateTemperature.bind(this));
         this.temperatureService.addCharacteristic(CommunityTypes.AtmosphericPressureLevel); //Add pressure characteristic.
-        
+        this.temperatureService
+            .getCharacteristic(CommunityTypes.AtmosphericPressureLevel)
+            .setProps({format: Characteristic.Formats.UINT16, minValue: 800, maxValue: 1200});
 
         //Service status.
         this.temperatureService.addOptionalCharacteristic(Characteristic.StatusFault); 
@@ -134,11 +137,17 @@ BOMgovau.prototype.updateObservations = function() {
         this.log("Current Time is "+curTime+", BOM data expires at "+this.BOMdataExpires);
         this.log("Updating observations from BOM.");
 
-        fetch(this.stationURL)
+        const options = {
+            headers: { 'User-Agent': this.plugin + '/' + this.version + ' (' + this.name + ')' },
+        };
+
+        fetch(this.stationURL, options)
           .then(response => {
-            response.json().then(json => {
+            response.json()
+            .then(json => {
                 this.obs=json['observations']['data'][0];
-                this.log("Observations retrieved.");
+                this.header=json['observations']['header'][0]
+                this.log("Observations retrieved for " + this.header.name + ", " + this.header.state);
                 
                 var BOMyear=parseInt(this.obs.aifstime_utc.substr(0,4));
                 var BOMmonth=parseInt(this.obs.aifstime_utc.substr(4,2))-1; //Months start at 0, not 1.
@@ -173,13 +182,19 @@ BOMgovau.prototype.updateObservations = function() {
                 
                 //FakeGato logs:
                 this.history.addEntry({
-                      time: moment().unix(),
+                      time: curTime,
                       temp: this.obs.air_temp,
                       pressure: this.obs.press,
                       humidity: this.obs.rel_hum
                     });
                 this.log("Added FakeGato history")
                                             
+            })
+            .catch(error => {
+                this.temperatureService.setCharacteristic(Characteristic.StatusFault,true);
+                this.humidityService.setCharacteristic(Characteristic.StatusFault,true);
+                this.log('Request failed: ' + response.status)
+                this.log(error);      
             });
           })
           .catch(error => {
