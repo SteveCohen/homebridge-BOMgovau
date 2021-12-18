@@ -24,7 +24,7 @@
     "url": "git://github.com/stevecohen/homebridge-BOMgovau"
   },
   "dependencies": {
-    "node-fetch":">=1.0",
+    "node-fetch":"^2.6.6",
     "fakegato-history": ">0.4.0",
     "hap-nodejs-community-types": "https://github.com/homespun/hap-nodejs-community-types.git"
     }
