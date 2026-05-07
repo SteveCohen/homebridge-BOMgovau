@@ -1,7 +1,12 @@
 
 # Homebridge-BOMgovau
-
 Retrieves official weather data (temperature, humidity, air pressure) from the Australian [Bureau of Meteorology](http://www.bom.gov.au).
+
+---
+NOTICE: This repo is no longer maintained, and DOES NOT WORK ON CURRENT VERSIONS OF HOMEBRIDGE. Any issues will be politely closed. Thanks for your interest. If you'd like to fork this and maintain it, please feel free. 
+--- 
+
+
 
 # Installation
 
